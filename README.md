@@ -64,6 +64,7 @@ container.Register[I](func() any {
 v3 := container.Make[I]()
 println(v3.Key()) // test_interface
 ```
+
 ### 在容器中设置一个实例(单例)
 ```
 // 在容器中设置一个实例(单例)

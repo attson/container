@@ -51,11 +51,6 @@ func (c *Container) Get(key any) any {
 }
 
 func bindKey(key any) string {
-	// if key is reflect.Type
-	if of, ok := key.(reflect.Method); ok {
-		return of.PkgPath + "." + of.Name
-	}
-
 	var of reflect.Type
 
 	// if key is reflect.Type
