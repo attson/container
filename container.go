@@ -5,16 +5,16 @@ import (
 )
 
 type Container struct {
-	instances map[string]any
-	registers map[string]any
+	instances map[reflect.Type]any
+	registers map[reflect.Type]any
 }
 
 var DefaultContainer = NewContainer()
 
 func NewContainer() *Container {
 	return &Container{
-		instances: make(map[string]any),
-		registers: make(map[string]any),
+		instances: make(map[reflect.Type]any),
+		registers: make(map[reflect.Type]any),
 	}
 }
 
@@ -50,7 +50,12 @@ func (c *Container) Get(key any) any {
 	return c.instances[bindKey(key)]
 }
 
-func bindKey(key any) string {
+func (c *Container) Clear() {
+	c.instances = make(map[reflect.Type]any)
+	c.registers = make(map[reflect.Type]any)
+}
+
+func bindKey(key any) reflect.Type {
 	var of reflect.Type
 
 	// if key is reflect.Type
@@ -60,31 +65,31 @@ func bindKey(key any) string {
 		of = reflect.TypeOf(key)
 	}
 
-	if of.Kind() == reflect.Ptr {
-		return "*" + of.Elem().PkgPath() + "." + of.Elem().Name()
-	}
-
-	return of.PkgPath() + "." + of.Name()
+	return of
 }
 
 func Set[T any](ins T) {
-	var t *T
+	var t T
 
-	DefaultContainer.Set(reflect.TypeOf(t).Elem(), ins)
+	DefaultContainer.Set(reflect.TypeOf(t), ins)
 }
 
 func Get[T any]() T {
-	var t *T
-	return DefaultContainer.Get(reflect.TypeOf(t).Elem()).(T)
+	var t T
+	return DefaultContainer.Get(reflect.TypeOf(t)).(T)
 }
 
 func Make[T any]() T {
-	var t *T
+	var t T
 
-	return DefaultContainer.Make(reflect.TypeOf(t).Elem()).(T)
+	return DefaultContainer.Make(reflect.TypeOf(t)).(T)
 }
 
 func Register[T any](callback any) {
-	var t *T
-	DefaultContainer.Register(reflect.TypeOf(t).Elem(), callback)
+	var t T
+	DefaultContainer.Register(reflect.TypeOf(t), callback)
+}
+
+func Clear() {
+	DefaultContainer.Clear()
 }
