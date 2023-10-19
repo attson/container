@@ -24,8 +24,9 @@ func (c *Container) Register(key any, value any) {
 
 func (c *Container) Make(key any) any {
 	if a, ok := c.registers[bindKey(key)]; ok {
-		if b, ok := a.(func() any); ok {
-			return b()
+		of := reflect.ValueOf(a)
+		if of.Kind() == reflect.Func {
+			return of.Call(nil)[0].Interface()
 		}
 	} else {
 		if of, ok := key.(reflect.Type); ok {
@@ -48,6 +49,22 @@ func (c *Container) Set(key any, ins any) {
 
 func (c *Container) Get(key any) any {
 	return c.instances[bindKey(key)]
+}
+
+func (c *Container) Has(key any) bool {
+	_, ok := c.instances[bindKey(key)]
+
+	return ok
+}
+
+func (c *Container) RegisteredKeys() []string {
+	var keys []string
+
+	for k, _ := range c.registers {
+		keys = append(keys, k.String())
+	}
+
+	return keys
 }
 
 func (c *Container) Clear() {
@@ -79,6 +96,11 @@ func Get[T any]() T {
 	return DefaultContainer.Get(reflect.TypeOf(t)).(T)
 }
 
+func Has[T any]() bool {
+	var t T
+	return DefaultContainer.Has(reflect.TypeOf(t))
+}
+
 func Make[T any]() T {
 	var t T
 
@@ -88,6 +110,10 @@ func Make[T any]() T {
 func Register[T any](callback any) {
 	var t T
 	DefaultContainer.Register(reflect.TypeOf(t), callback)
+}
+
+func RegisteredKeys() []string {
+	return DefaultContainer.RegisteredKeys()
 }
 
 func Clear() {
