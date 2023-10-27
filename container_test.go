@@ -146,7 +146,7 @@ func TestNotRegister(t *testing.T) {
 	defer func() {
 		if err := recover(); err != nil {
 			e := fmt.Sprintf("%s", err)
-			if e != "reflect: New(nil)" {
+			if e != "interface conversion: interface is nil, not container.I" {
 				t.Error("test fail: " + e)
 			}
 		}
@@ -228,9 +228,30 @@ func TestRegisteredKeys(t *testing.T) {
 		}
 	})
 
-	strings.Join(DefaultContainer.RegisteredKeys(), ",")
-
 	if strings.Join(DefaultContainer.RegisteredKeys(), ",") != "*container.Test,container.Test,*container.I" {
-		t.Error("keys is not equal")
+		t.Error("keys is not equal: " + strings.Join(DefaultContainer.RegisteredKeys(), ","))
+	}
+}
+
+func TestRegisterWithKey(t *testing.T) {
+	testSetup()
+
+	SetK("test1", Test{
+		Name: "set1",
+	})
+	k := GetK[Test]("test1")
+	if k.Name != "set1" {
+		t.Error("test fail")
+	}
+
+	RegisterK("test2", func() any {
+		return Test{
+			Name: "test_struct",
+		}
+	})
+
+	v1 := MakeK[Test]("test2")
+	if v1.Name != "test_struct" {
+		t.Error("test fail")
 	}
 }
