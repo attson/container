@@ -81,30 +81,33 @@ func (c *Container) Clear() {
 }
 
 func Set[T any](ins T) {
-	var t T
+	var t *T
 
-	DefaultContainer.Set(t, ins)
+	DefaultContainer.Set(reflect.TypeOf(t).Elem(), ins)
 }
 
 func Get[T any]() T {
-	var t T
-	return DefaultContainer.Get(t).(T)
+	var t *T
+
+	return DefaultContainer.Get(reflect.TypeOf(t).Elem()).(T)
 }
 
 func Has[T any]() bool {
-	var t T
-	return DefaultContainer.Has(t)
+	var t *T
+
+	return DefaultContainer.Has(reflect.TypeOf(t).Elem())
 }
 
 func Make[T any]() T {
-	var t T
+	var t *T
 
-	return DefaultContainer.Make(t).(T)
+	return DefaultContainer.Make(reflect.TypeOf(t).Elem()).(T)
 }
 
 func Register[T any](callback any) {
-	var t T
-	DefaultContainer.Register(t, callback)
+	var t *T
+
+	DefaultContainer.Register(reflect.TypeOf(t).Elem(), callback)
 }
 
 func RegisteredKeys() []string {

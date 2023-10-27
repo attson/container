@@ -18,6 +18,10 @@ type I interface {
 	Key() string
 }
 
+type II interface {
+	Key() string
+}
+
 func testSetup() {
 	Clear()
 }
@@ -252,6 +256,26 @@ func TestRegisterWithKey(t *testing.T) {
 
 	v1 := MakeK[Test]("test2")
 	if v1.Name != "test_struct" {
+		t.Error("test fail")
+	}
+}
+
+func TestRegisterInterfaces(t *testing.T) {
+	Set[I](Test{
+		Name: "set1",
+	})
+
+	Set[II](Test{
+		Name: "set2",
+	})
+
+	v1 := Get[I]()
+	if v1.Key() != "set1" {
+		t.Error("test fail")
+	}
+
+	v2 := Get[II]()
+	if v2.Key() != "set2" {
 		t.Error("test fail")
 	}
 }
