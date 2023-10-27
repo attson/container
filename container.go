@@ -7,6 +7,7 @@ import (
 type Container struct {
 	instances map[any]any
 	registers map[any]any
+	factories []Factory
 }
 
 var DefaultContainer = NewContainer()
@@ -16,6 +17,10 @@ func NewContainer() *Container {
 		instances: make(map[any]any),
 		registers: make(map[any]any),
 	}
+}
+
+func (c *Container) AddFactory(factory Factory) {
+	c.factories = append(c.factories, factory)
 }
 
 func (c *Container) Register(key any, value any) {
@@ -29,23 +34,13 @@ func (c *Container) Make(key any) any {
 			return of.Call(nil)[0].Interface()
 		}
 	} else {
-		var typ reflect.Type
-
-		if of, ok := key.(reflect.Type); ok {
-			typ = of
-		} else {
-			typ = reflect.TypeOf(key)
+		for _, factory := range c.factories {
+			if factory.Resolvable(key) {
+				return factory.Resolve(key)
+			}
 		}
 
-		if typ == nil {
-			return nil
-		}
-
-		if typ.Kind() == reflect.Ptr {
-			return reflect.New(typ.Elem()).Interface()
-		} else {
-			return reflect.New(typ).Elem().Interface()
-		}
+		return DefaultFactoryInstance.Resolve(key)
 	}
 
 	return nil
@@ -132,4 +127,8 @@ func GetK[T any](key string) T {
 
 func Clear() {
 	DefaultContainer.Clear()
+}
+
+func AddFactory(factory Factory) {
+	DefaultContainer.AddFactory(factory)
 }
