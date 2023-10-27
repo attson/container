@@ -2,7 +2,7 @@ package container
 
 import (
 	"fmt"
-	"strings"
+	"golang.org/x/exp/slices"
 	"testing"
 )
 
@@ -15,6 +15,10 @@ func (t Test) Key() string {
 }
 
 type I interface {
+	Key() string
+}
+
+type II interface {
 	Key() string
 }
 
@@ -146,7 +150,7 @@ func TestNotRegister(t *testing.T) {
 	defer func() {
 		if err := recover(); err != nil {
 			e := fmt.Sprintf("%s", err)
-			if e != "reflect: New(nil)" {
+			if e != "interface conversion: interface is nil, not container.I" {
 				t.Error("test fail: " + e)
 			}
 		}
@@ -227,10 +231,66 @@ func TestRegisteredKeys(t *testing.T) {
 			Name: "test_interface",
 		}
 	})
+	keys := DefaultContainer.RegisteredKeys()
 
-	strings.Join(DefaultContainer.RegisteredKeys(), ",")
+	for _, s := range []string{"*container.Test", "container.Test", "*container.I"} {
+		if !slices.Contains(keys, s) {
+			t.Error("keys is not contain: " + s)
+		}
+	}
+}
 
-	if strings.Join(DefaultContainer.RegisteredKeys(), ",") != "*container.Test,container.Test,*container.I" {
-		t.Error("keys is not equal")
+func TestRegisterWithKey(t *testing.T) {
+	testSetup()
+
+	SetK("test1", Test{
+		Name: "set1",
+	})
+	k := GetK[Test]("test1")
+	if k.Name != "set1" {
+		t.Error("test fail")
+	}
+
+	RegisterK("test2", func() any {
+		return Test{
+			Name: "test_struct",
+		}
+	})
+
+	v1 := MakeK[Test]("test2")
+	if v1.Name != "test_struct" {
+		t.Error("test fail")
+	}
+}
+
+func TestRegisterInterfaces(t *testing.T) {
+	Set[I](Test{
+		Name: "set1",
+	})
+
+	Set[II](Test{
+		Name: "set2",
+	})
+
+	v1 := Get[I]()
+	if v1.Key() != "set1" {
+		t.Error("test fail")
+	}
+
+	v2 := Get[II]()
+	if v2.Key() != "set2" {
+		t.Error("test fail")
+	}
+}
+
+func TestMakeRegistered(t *testing.T) {
+	testSetup()
+	Set[I](Test{
+		Name: "set1",
+	})
+
+	v1 := Make[I]()
+	if v1.Key() != "set1" {
+		t.Error("test fail")
 	}
 }
