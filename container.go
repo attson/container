@@ -36,7 +36,12 @@ func (c *Container) Make(key any) any {
 	} else {
 		for _, factory := range c.factories {
 			if factory.Resolvable(key) {
-				return factory.Resolve(key)
+				v := factory.Resolve(key)
+				if factory.IsShared(key) {
+					c.instances[key] = v
+				}
+
+				return v
 			}
 		}
 
