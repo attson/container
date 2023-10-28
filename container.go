@@ -28,6 +28,10 @@ func (c *Container) Register(key any, value any) {
 }
 
 func (c *Container) Make(key any) any {
+	if a, ok := c.instances[key]; ok {
+		return a
+	}
+
 	if a, ok := c.registers[key]; ok {
 		of := reflect.ValueOf(a)
 		if of.Kind() == reflect.Func {

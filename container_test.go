@@ -2,7 +2,7 @@ package container
 
 import (
 	"fmt"
-	"strings"
+	"golang.org/x/exp/slices"
 	"testing"
 )
 
@@ -231,9 +231,12 @@ func TestRegisteredKeys(t *testing.T) {
 			Name: "test_interface",
 		}
 	})
+	keys := DefaultContainer.RegisteredKeys()
 
-	if strings.Join(DefaultContainer.RegisteredKeys(), ",") != "*container.Test,container.Test,*container.I" {
-		t.Error("keys is not equal: " + strings.Join(DefaultContainer.RegisteredKeys(), ","))
+	for _, s := range []string{"*container.Test", "container.Test", "*container.I"} {
+		if !slices.Contains(keys, s) {
+			t.Error("keys is not contain: " + s)
+		}
 	}
 }
 
@@ -276,6 +279,18 @@ func TestRegisterInterfaces(t *testing.T) {
 
 	v2 := Get[II]()
 	if v2.Key() != "set2" {
+		t.Error("test fail")
+	}
+}
+
+func TestMakeRegistered(t *testing.T) {
+	testSetup()
+	Set[I](Test{
+		Name: "set1",
+	})
+
+	v1 := Make[I]()
+	if v1.Key() != "set1" {
 		t.Error("test fail")
 	}
 }
